@@ -18,8 +18,11 @@ The work will be presented by a web application in a near future.
 ### Pinterest Profiles
 
 In order to obtain user information and their pins, I scrape Pinterest usernames first by extracting random usernames and after their followers names. I extract a total of 50000 users with respective pins information.
-The information from the pins is obtained by an RSS feed:
+The information from the pins is obtained by an RSS feed: https://www.pinterest.com/username/feed.rss
 
-https://www.pinterest.com/<username>/feed.rss
+### Products
 
-To scrape the web to collect Pinterest usernames and to use the Pinterest API in order to obtain user's pin information. To scrape Amazon Gift Finder in order to obtain the gift Finder database.
+The products from the recommendation system were scrapes from Amazon.com Gift Finder Section.
+
+![Alt][1]
+[1]: /images/pins.png "Pins"
