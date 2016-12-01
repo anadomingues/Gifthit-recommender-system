@@ -139,6 +139,8 @@ if __name__ == '__main__':
     price_limit = float(input('Enter maximum gift price: '))
     # get user pins and cleans it
     df = get_feed_user(user_friend)
+    if df.empty:
+        print "Username not found, please check if username exists"
     df = clean_pins(df)
     df_prod = load_data('../amazon_products_description_final.csv')
     df_prod = clean_products(df_prod)
@@ -180,19 +182,19 @@ if __name__ == '__main__':
                 descriptions.append(stemmed_tokens)
         # If all the pins are empty stop the code
         if descriptions == []:
-            print "The user {} pin descriptions are empty! Sorry, no products can be recommended".format(user)
+            print "The user {} pin descriptions are empty! Sorry, no product can be recommended".format(user)
             break
         dictionary = corpora.Dictionary(descriptions)
         corpus = [dictionary.doc2bow(description) for description in descriptions]
         if len(user_pins)/3 == 0:
             n_topics = 1
         else:
-            n_topics = len(user_pins)/2
+            n_topics = len(user_pins)/3
         ldamodel = gensim.models.ldamodel.LdaModel(corpus, num_topics=n_topics, id2word = dictionary, passes=100)
-        topics = [' '.join([ldamodel.show_topics()[i][1].split('"')[j] for j in xrange(len(ldamodel.show_topics()[i][1].split('"'))) if (j%2 != 0)]) for i in xrange(len(ldamodel.show_topics()))]
+        topics = [' '.join([str(j[0]) for j in ldamodel.show_topic(i)]) for i in xrange(n_topics)]
         #print "Topics:"
         #print topics
-        probs = [', '.join([ldamodel.show_topics()[i][1].split('"')[j].replace(' +','')[:-1] for j in xrange(len(ldamodel.show_topics()[i][1].split('"'))) if (j%2 == 0)]) for i in xrange(len(ldamodel.show_topics()))]
+        probs = [', '.join([str(j[1]) for j in ldamodel.show_topic(i)]) for i in xrange(n_topics)]
         proba = [[j.replace(' ','') for j in i.split(', ')][:-1] for i in probs]
         final_probs = [[float(j) for j in i] for i in proba]
         total_topics.append(topics)
@@ -205,28 +207,30 @@ if __name__ == '__main__':
         db, n_clusters, labels, core_samples_mask = db_scan(X, eps=0.7, min_samples=2)
         # Add exception in case clusters could not be formed because the topics were too "far away"
         if (n_clusters == 0) or (n_clusters == 1):
-            eps = 0.79
+            eps = 0.8
             min_samples = 2
             db, n_clusters, labels, core_samples_mask = db_scan(X,eps,min_samples)
         # If clusters = 0, then it means that we have to use min_samples = 1 and have one main topic
-        elif n_clusters == 0:
-            min_samples = 1
-            eps=0.6
-            db, n_clusters, labels, core_samples_mask = db_scan(X,eps,min_samples)
+            if n_clusters == 0:
+                min_samples = 1
+                eps=0.6
+                db, n_clusters, labels, core_samples_mask = db_scan(X,eps,min_samples)
         results = (db, n_clusters, labels, core_samples_mask, db.core_sample_indices_)
         user_clusters_results.append(results)
         real_labels = labels[labels+1 != 0]
         # In case all the topics are very different to each other limit to 5
         if (n_clusters == n_topics) :
-            for k in xrange(5):
-                clust = random.randint(1, n_topics)
+            for k in xrange(2):
+                clust = random.randint(0, n_topics-1)
                 db.core_sample_indices_[real_labels == clust]
                 user_clusters.append(db.core_sample_indices_[real_labels == clust])
-                prefered_topic = topics[max([(final_probs[i][0],i) for i in db.core_sample_indices_[real_labels == clust]])[1]]
+                #prefered_topic = topics[max([(final_probs[i][0],i) for i in db.core_sample_indices_[real_labels == clust]])[1]]
+                prefered_topic = [topics[i] for i in [int(m) for m in list(db.core_sample_indices_[real_labels == clust])]]
                 user_prefered_topics.append(prefered_topic)
         else:
             # From the chosen clusters, chose the centroid (topics with highest probability)
             for clust in xrange(n_clusters):
+                print "passing here"
                 db.core_sample_indices_[real_labels == clust]
                 user_clusters.append(db.core_sample_indices_[real_labels == clust])
                 prefered_topic = topics[max([(final_probs[i][0],i) for i in db.core_sample_indices_[real_labels == clust]])[1]]
@@ -240,26 +244,30 @@ if __name__ == '__main__':
         product_list_links = df_prod[df_prod['product_price'] <= price_limit]['product_amazon_link'].values
         vect = TfidfVectorizer(stop_words='english', tokenizer=tokenize)
         lista = []
+        cos_matrices = []
         if len(user_prefered_topics) == 1:
             n = 6
         else:
-            n = 4
+            n = 3
         for topic in user_prefered_topics:
             docs = copy(prod_doc)
-            docs.append(topic)
+            docs.append(topic[0])
             X = vect.fit_transform(docs)
             cosine_similarity = linear_kernel(X, X)
+            cos_matrices.append(cosine_similarity)
             sorted_matrix = np.argsort(cosine_similarity[-1])[::-1][1:n]
             lista += list(sorted_matrix)
-            lista = list(set(lista))
-            if len(lista) < 5:
-                continue
-            else:
-                break
+
+        if len(lista) < 5:
+            sorted_matrix = np.argsort(cos_matrices[random.randint(0, 1)][-1])[::-1][3:4]
+            lista += list(sorted_matrix)
+
+        lista = list(set(lista))
         recommendations.append(lista)
         # Outputs the result
         print "Products recommendation:"
         print product_list[lista[:5]]
         print product_list_description[lista[:5]]
         print "Products prices:"
+        print product_list_price[lista[:5]]
         print product_list_links[lista[:5]]
