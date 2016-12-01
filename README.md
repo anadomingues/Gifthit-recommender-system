@@ -24,6 +24,48 @@ The pins descriptions are obtained by an RSS feed: https://www.pinterest.com/use
 
 ### Products
 
-The products for the recommendation system were scraped from Amazon.com Gift Finder Section. Department information, title of the product, price and product images and descriptions are obtained.
+The products for the recommendation system were scraped from Amazon.com Gift Finder Section. Department information, title of the product, price and product images and descriptions are obtained. A total of 7863 products were collected.
 
-![Pins](images/amazon_products.png)
+![products](images/amazon_products.png)
+
+### Methodology
+
+After obtaining the data from web-scraping, I applied Natural Language Processing (NLP) techniques and Latent Dirichlet Allocation (LDA) in order to perform topic modeling. This process allowed to reduce the dimensions of the problem by going from text based pins into topics. Based on the topic modeling we apply Density Based Spatial Clustering Application with Noise (DBSCAN) in order to remove the outlier topics and focus on the closest topics. From these two topics we perform a pairwise comparison with the products descriptions and recommend the top 5 products that are more similar to the topics selected.
+
+![workflow](images/workflow.png)
+
+### Example
+
+In this example we set the two required inputs from the user:
+Maximum price: $30
+Pinterest username of whom we want to give a present to: catherineann03
+
+Looking at Catherine profile we can observe what she likes:
+![profile](images/profile.png)
+
+The recommendation system recommends 5 products bellow the price limit ($30):
+
+![profile](images/recommendation.png)
+
+### Future Work
+
+In the future I would like to:
+
+- Integrate the code into a Web Application;
+- Implement user-user similarity in the model;
+- Add more users to the database in order to improve the model;
+- Add more products to the database in order to improve the recommendations.
+
+
+### Acknowledges
+
+- Moses Marsh, Dan Wiesenthal for the guidance and support
+- Colleagues from SF-DSI cohort 17 and 18 for all the feedback and fruitful discussions  
+
+
+#### References:
+
+[1] Bird, Steven, Edward Loper and Ewan Klein (2009), Natural Language Processing with Python. O’Reilly Media Inc.
+
+#### Tools used:
+ Python( BeautifulSoup , Selenium, Feedparser, Numpy, Pandas, Scikit-Learn, Nltk, gensim, Flask), Amazon Web Services(Amazon EC2), Amazon.com and Pinterest API.
