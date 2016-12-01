@@ -24,4 +24,5 @@ The information from the pins is obtained by an RSS feed: https://www.pinterest.
 
 The products from the recommendation system were scrapes from Amazon.com Gift Finder Section.
 
-![](/images/pins.png =250x)
+![Alt][1]
+[1]: /images/pins.png =250x
