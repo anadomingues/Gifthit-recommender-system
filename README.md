@@ -24,4 +24,4 @@ The information from the pins is obtained by an RSS feed: https://www.pinterest.
 
 The products from the recommendation system were scrapes from Amazon.com Gift Finder Section.
 
-![Pins](images/pins.png)
+![Pins](images/pins.png|width=100)
